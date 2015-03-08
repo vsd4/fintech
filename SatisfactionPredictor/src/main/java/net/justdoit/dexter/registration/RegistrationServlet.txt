@@ -1,0 +1,166 @@
+package net.justdoit.dexter.registration;
+
+import java.io.BufferedReader;
+import java.io.IOException;
+import java.sql.PreparedStatement;
+import java.sql.SQLException;
+import java.util.List;
+
+import javax.servlet.ServletException;
+import javax.servlet.http.HttpServlet;
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
+
+import net.justdoit.dexter.util.ConnectionManager;
+import net.justdoit.dexter.util.ParseUrlParams;
+
+import org.apache.log4j.Logger;
+import org.apache.http.client.utils.URLEncodedUtils;
+import org.apache.http.NameValuePair;
+
+public class RegistrationServlet extends HttpServlet {
+    /**
+	 * 
+	 */
+	private static final long serialVersionUID = -3475832444555821191L;
+
+	/** The logger object. */
+    private static Logger logger = Logger.getLogger(RegistrationServlet.class);
+
+    @Override
+    public void doPost(HttpServletRequest req, HttpServletResponse res) throws ServletException, IOException {
+    	String postData = "{}";
+        
+        try {
+            BufferedReader reader = req.getReader();
+
+            StringBuilder sb = new StringBuilder();
+            String line = reader.readLine();
+            while (line != null) {
+                sb.append(line + "\n");
+                line = reader.readLine();
+            }
+            reader.close();
+
+            postData = sb.toString().trim();
+           
+//            if (logger.isDebugEnabled()) {
+                logger.info("postData = " + postData);
+//            }
+        } catch (IOException e) {
+            logger.error("Request " + req + "\nServer Connectivity Issues, IO Exception " + e);
+            res.sendError(500, "Server Connectivity Issues, IO Exception " + e);
+        }
+        
+        KSONObject postKSON = null;
+        try {
+            postKSON = KSONAbstractFactory.getDefaultFactory().createObject(postData);
+        } catch (KSONException e) {
+            System.out.println("postData = " + postData);
+            System.out.println("KSON parsing failed trying another");
+            //e.printStackTrace();
+            
+            try {
+            	postKSON = ParseUrlParams.parse(postData);
+            } catch (KSONException e2) {
+                e2.printStackTrace();
+                res.sendError(400, "Malformed JSON Object - Parse Exception  " + e2);
+            }
+        }
+        
+        if(postKSON != null){
+        	processRequest(postKSON, res);
+        }
+    }
+
+    @Override
+    public void doGet(HttpServletRequest req, HttpServletResponse res) throws ServletException, IOException {
+        
+    	logger.info("get request map " + req.getParameterMap());
+    	
+    	KSONObject postKSON = KSONAbstractFactory.getDefaultFactory().createEmptyObject();
+        java.util.Map<String,String[]> requestParam = req.getParameterMap();
+        for (String e : requestParam.keySet()) {
+            String[] paramValues = requestParam.get(e);
+            if(paramValues.length  == 1){
+                postKSON.put(e, paramValues[0]);
+            } else {
+                logger.error("Convert get request to json used in internal processing multiple parameter values " + e);
+            }
+        }
+        
+        processRequest(postKSON,res);
+    }
+    
+    /**
+     * TODO Strip input JSON of additional key-value pairs before looking up cache
+     * 
+     * @param inputKSON
+     * @param res
+     * @throws ServletException
+     */
+    private void processRequest(KSONObject inputKSON, HttpServletResponse res) throws ServletException, IOException{
+        KSONObject acknowledgementKSON = KSONAbstractFactory.getDefaultFactory().createEmptyObject();
+        
+        PreparedStatement sqlInsertUser = null;
+        try {
+        	acknowledgementKSON.put("router_version", "0.1");
+            
+        	String eventType = inputKSON.getString("type");
+            logger.info("Registration service request + " + " " + inputKSON.toJSONString());
+            
+            if (eventType != null) {
+            	if("add_user".equalsIgnoreCase(eventType)){
+            		sqlInsertUser = ConnectionManager.getPstmtAddUser();
+            		String userId = inputKSON.getString("user_id");
+            		String deviceId = inputKSON.getString("device_id");
+            		
+            		if(userId != null && deviceId != null){
+            			
+            			String deviceTypeStr = inputKSON.getString("device_type");
+                		
+                		try {
+                			int deviceType = Integer.parseInt(deviceTypeStr);
+                		
+		            		sqlInsertUser.setString(1,userId);
+		            		sqlInsertUser.setString(2,deviceId);
+		            		sqlInsertUser.setInt(3,deviceType);
+		            		sqlInsertUser.execute();
+		            		boolean status = (sqlInsertUser.getUpdateCount() > 0);
+		            		acknowledgementKSON.put("status", status);
+                		} catch(NumberFormatException nfe){
+                			res.sendError(RouterDataValidationException.HTTP_NOT_FOUND,
+                                    "Reason: No Data Found In Request");
+                			return;
+                		}
+            		} else {
+            			res.sendError(RouterDataValidationException.HTTP_NOT_FOUND,
+                                "Reason: No Data Found In Request");
+            			return;
+            		}
+            	}
+            	
+            	res.setStatus(201);
+                res.setContentType("application/json; charset=UTF-8");
+                res.getWriter().print(acknowledgementKSON.toJSONString());
+                res.getWriter().close();
+            } else {
+                res.sendError(RouterDataValidationException.HTTP_NOT_FOUND,
+                        "Reason: No Data Found In Request");
+                return;
+            }
+        } catch (SQLException e) {
+        	
+            res.sendError(500, "Database Connectivity Issues, SQL Exception " + e);
+        } finally {
+        	 if (sqlInsertUser != null) {
+                 try {
+                	 sqlInsertUser.getConnection().close();
+                 } catch (SQLException e) {
+                     logger.error("problems closing prepared statement to insert user " + e);
+                     e.printStackTrace();
+                 }
+             }
+        }
+    }
+}

@@ -1,0 +1,42 @@
+<!DOCTYPE web-app PUBLIC
+ "-//Sun Microsystems, Inc.//DTD Web Application 2.3//EN"
+ "http://java.sun.com/dtd/web-app_2_3.dtd" >
+
+<web-app>
+  <display-name>Smart Budget Allocator Service</display-name>
+  
+  <servlet>
+    <servlet-name>allocator</servlet-name>
+    <servlet-class>net.justdoit.dexter.allocator.AllocatorServlet</servlet-class>
+    <init-param>
+      <param-name>configFile</param-name>
+      <param-value>/WEB-INF/server.cfg</param-value>
+    </init-param>
+    <init-param>
+      <param-name>logConfigFile</param-name>
+      <param-value>/WEB-INF/log4j.properties</param-value>
+    </init-param>
+    <init-param>
+      <param-name>log</param-name>
+      <param-value>/log</param-value>
+    </init-param>
+  </servlet>
+
+  
+  <servlet-mapping>
+    <servlet-name>allocator</servlet-name>
+    <url-pattern>/allocator</url-pattern>
+  </servlet-mapping>
+
+  <!--servlet>
+    <servlet-name>registration</servlet-name>
+    <servlet-class>net.justdoit.dexter.registration.RegistrationServlet</servlet-class>
+    <load-on-startup>1</load-on-startup>
+  </servlet>
+
+  <servlet-mapping>
+    <servlet-name>registration</servlet-name>
+    <url-pattern>/register</url-pattern>
+  </servlet-mapping-->
+
+</web-app>
