@@ -7,7 +7,7 @@ public class DexterRequest {
 
 	public double budget;
 	
-	List<Category> ratingsAndPreferredAllocations;
+	public List<Category> ratingsAndPreferredAllocations;
 	
 	public List<Transaction> transactions;
 	

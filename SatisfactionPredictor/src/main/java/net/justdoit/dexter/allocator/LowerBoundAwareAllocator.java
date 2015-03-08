@@ -17,45 +17,24 @@ import net.justdoit.dexter.model.Transaction;
 
 import org.apache.log4j.Logger;
 
-//import net.justdoit.dexter.model.User;
-//import net.justdoit.dexter.model.UserDeviceType;
-//import net.justdoit.narada.util.ConnectionManager;
-
-public class AllocatorModel extends CommonModel {
+public class LowerBoundAwareAllocator extends Allocator {
 	
-	static Comparator<Category> CategoryComparator 
-		    = new Comparator<Category>() {
-		
-		public int compare(Category cat1, Category cat2) {
-		
-			double amount1 = cat1.amount;
-			double amount2 = cat2.amount;
-			
-			return (new Double(amount2)).compareTo(amount1);
-		}
-		
-	};
-	
-    private static Logger logger = Logger.getLogger(AllocatorModel.class);
+    private static Logger logger = Logger.getLogger(LowerBoundAwareAllocator.class);
 
-    private static boolean debugEnabled;
-    public static final String TIMESTAMP = "server_timestamp";
-    
-    private AllocatorModel(){
+   
+    private LowerBoundAwareAllocator(){
     	
     }
     
-    private static AllocatorModel mInstance = null;
+    private static LowerBoundAwareAllocator mInstance = null;
     
-    public static AllocatorModel getInstance(){
+    public static LowerBoundAwareAllocator getInstance(){
     	if(mInstance == null){
-    		mInstance = new AllocatorModel();
+    		mInstance = new LowerBoundAwareAllocator();
     	}
     	return mInstance;
     }
 
-    static final int TRANS_DAYS_USED_IN_MODEL = 90;
-    
     /**
      * heuristic1
      * merge historical expenses by categories over past 3 months
@@ -112,13 +91,30 @@ public class AllocatorModel extends CommonModel {
     	}
     	
     	List<Category> categoriesList = new LinkedList<Category>(categories);
+    	
+    	// go through categories and compute remaining budget
+    	double budgetRemaining = budget;
+    	
+    	List<Category> categoriesWithPreferences = req.ratingsAndPreferredAllocations;
+    	if(categoriesWithPreferences != null){
+	    	for(Category cat : categoriesWithPreferences){
+	    		if(!expensesByCategory.containsKey(cat.getCategory())){
+	    			categoriesList.add(cat);
+	    		}
+	    	}
+    	}
+    	
+    	for(Category cat : categoriesList){
+    		budgetRemaining -= (cat.minAllocation);
+    	}
+    	
     	Collections.sort(categoriesList, CategoryComparator);
     	
     	// get expense ratios and allocate
-    	for(Category cat : categories){
+    	for(Category cat : categoriesList){
     		double expenseRatio = cat.amount/sumExpenses;
     		cat.expenseRatio = expenseRatio;
-    		cat.allocation = Math.floor(expenseRatio*budget);
+    		cat.allocation = cat.minAllocation + Math.max(Math.floor(expenseRatio*budgetRemaining),0);
     	}
     	
     	return categoriesList;

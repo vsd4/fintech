@@ -6,7 +6,7 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 
-import net.justdoit.dexter.allocator.AllocatorModel;
+import net.justdoit.dexter.allocator.*;
 import net.justdoit.dexter.model.Category;
 import net.justdoit.dexter.model.DexterRequest;
 import net.justdoit.dexter.model.Transaction;
@@ -91,7 +91,7 @@ public class TestAllocatorModelWithTransactionsNoJunit{
     }
 	
 	void test(){
-		AllocatorModel allocator = AllocatorModel.getInstance();
+		Allocator allocator = PreferenceAgnosticAllocator.getInstance();
 		
 		List<Category> allocation = allocator.allocateBudget(req);
 		

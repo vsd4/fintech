@@ -36,6 +36,7 @@ public class Category {
 		sb.append("Name " + category);
 		//sb.append("\tAmount " + amount);
 		sb.append("\tAllocation " + allocation);
+		sb.append("\tMinAllocation " + minAllocation);
 		sb.append("\tExpenseRatio " + expenseRatio);
 		sb.append("\tRating " + rating);
 		

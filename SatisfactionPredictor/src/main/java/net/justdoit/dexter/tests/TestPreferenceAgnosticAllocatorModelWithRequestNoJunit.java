@@ -6,7 +6,7 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 
-import net.justdoit.dexter.allocator.AllocatorModel;
+import net.justdoit.dexter.allocator.*;
 import net.justdoit.dexter.model.Category;
 import net.justdoit.dexter.model.DexterRequest;
 import net.justdoit.dexter.model.Transaction;
@@ -15,7 +15,7 @@ import net.justdoit.dexter.util.*;
 import com.google.common.reflect.TypeToken;
 import com.google.gson.*;
 
-public class TestAllocatorModelWithRequestNoJunit{
+public class TestPreferenceAgnosticAllocatorModelWithRequestNoJunit{
 
 	DexterRequest req;
 	
@@ -48,7 +48,7 @@ public class TestAllocatorModelWithRequestNoJunit{
     }
 	
 	void test(){
-		AllocatorModel allocator = AllocatorModel.getInstance();
+		Allocator allocator = PreferenceAgnosticAllocator.getInstance();
 		
 		List<Category> allocation = allocator.allocateBudget(req);
 		
@@ -65,7 +65,7 @@ public class TestAllocatorModelWithRequestNoJunit{
 	}
 	
 	public static void main(String args[]){
-		TestAllocatorModelWithRequestNoJunit x = new TestAllocatorModelWithRequestNoJunit();
+		TestPreferenceAgnosticAllocatorModelWithRequestNoJunit x = new TestPreferenceAgnosticAllocatorModelWithRequestNoJunit();
 		
 		x.setup();
 		x.test();

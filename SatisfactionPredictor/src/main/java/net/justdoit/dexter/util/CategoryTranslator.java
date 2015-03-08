@@ -5,14 +5,15 @@ import net.justdoit.dexter.model.Category;
 import java.lang.reflect.Type;
 
 import com.google.common.reflect.TypeToken;
-import com.google.gson.JsonDeserializer;
-import com.google.gson.JsonDeserializationContext;
 import com.google.gson.JsonObject;
-import com.google.gson.GsonBuilder;
 import com.google.gson.*;
 
 public class CategoryTranslator implements JsonDeserializer<Category>, JsonSerializer<Category> {
 
+	static String ALLOCATION = "allocation";
+	static String RATING = "rating";
+	static String MIN_ALLOCATION = "minAllocation";
+	
 	/**
 	 * sample input from level
 	 * 
@@ -23,12 +24,20 @@ public class CategoryTranslator implements JsonDeserializer<Category>, JsonSeria
         Category c = new Category();
         
         c.setCategory(jobj.get("category").getAsString());
-        c.setAllocation(jobj.get("allocation").getAsDouble());
         
-        c.setMinAllocation(jobj.get("minAllocation").getAsDouble());
+        if(jobj.get(ALLOCATION) != null){
+        	c.setAllocation(jobj.get(ALLOCATION).getAsDouble());
+        }
         
-        c.setExpenseRatio(jobj.get("expenseRatio").getAsDouble());
-        c.setRating(jobj.get("rating").getAsShort());
+        if(jobj.get(RATING) != null){
+        	c.setRating(jobj.get(RATING).getAsShort());
+        } 
+        
+        if(jobj.get(MIN_ALLOCATION) != null){
+        	c.setMinAllocation(jobj.get(MIN_ALLOCATION).getAsDouble());
+        }
+        
+        //c.setExpenseRatio(jobj.get("expenseRatio").getAsDouble());
         
         return c;
     }

@@ -43,7 +43,7 @@ public class AllocatorServlet extends HttpServlet {
     /** The log level. */
     private static String logLevel = "info";
 
-    AllocatorModel allocator;
+    Allocator allocator;
     
     @Override
     public void init(ServletConfig config) throws ServletException {
@@ -75,7 +75,8 @@ public class AllocatorServlet extends HttpServlet {
             logger.info("Log level = " + logLevel);
             logger.info("configFile=" + configFile);
             
-            allocator = AllocatorModel.getInstance();
+            //allocator = PreferenceAgnosticAllocator.getInstance();
+            allocator = LowerBoundAwareAllocator.getInstance();
         } catch (Exception e) {
             e.printStackTrace();
             throw new ServletException(e);
@@ -125,6 +126,9 @@ public class AllocatorServlet extends HttpServlet {
         
         if(dexterRequest != null){
         	processRequest(dexterRequest, res);
+        } else {
+        	res.sendError(CommonModel.HTTP_NOT_FOUND,
+                  "Reason: Missing Data In Request");
         }
     }
     

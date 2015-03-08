@@ -73,7 +73,7 @@ public class AllocatorModelTest extends TestCase{
 	
 	@Test
 	public void test() {
-		AllocatorModel allocator = AllocatorModel.getInstance();
+		Allocator allocator = PreferenceAgnosticAllocator.getInstance();
 		
 		List<Category> allocation = allocator.allocateBudget(req);
 		
